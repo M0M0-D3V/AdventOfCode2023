@@ -1,4 +1,5 @@
 var fs = require("fs");
+const { isNumberObject } = require("util/types");
 var textArr = fs.readFileSync("./D1/d1.txt", "utf-8");
 // var textArr = fs.readFileSync("./D1/test.txt", "utf-8");
 var [...outputs] = textArr.split("\r\n");
@@ -54,31 +55,29 @@ const partTwo = (outputs) => {
   let sum = 0;
   for (let row of outputs) {
     let sub = 0;
-    // console.log(`\nrow is: ${row}`);
+    console.log(`\nrow is: ${row}`);
     let first;
     let last;
     let match = [
-      ...row.matchAll(/one|two|three|four|five|six|seven|eight|nine|\d/g),
+      ...row.matchAll(/(?=(one|two|three|four|five|six|seven|eight|nine))|\d/g),
     ];
-
     if (match.length) {
-      if (isNaN(match[0][0])) {
-        first = parseNumber(match[0][0]);
-      } else {
+      if (parseInt(match[0][0]) <= 9) {
         first = match[0][0];
+      } else if (isNaN(match[0][1])) {
+        first = parseNumber(match[0][1]);
       }
 
-      if (isNaN(match[match.length - 1][0])) {
-        last = parseNumber(match[match.length - 1][0]);
-      } else {
+      if (parseInt(match[match.length - 1][0]) <= 9) {
         last = match[match.length - 1][0];
+      } else if (isNaN(match[match.length - 1][1])) {
+        last = parseNumber(match[match.length - 1][1]);
       }
     }
 
     sub = first + last;
-    // console.log(`subtotal: ${sub}`);
+    console.log(`subtotal: ${sub}`);
     sum += Number(sub);
-    // console.log(`running total ${sum}\n`);
   }
   console.log(`sum Part Two is ${sum}`);
 };
