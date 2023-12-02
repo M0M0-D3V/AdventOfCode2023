@@ -1,5 +1,4 @@
 var fs = require("fs");
-const { isNumberObject } = require("util/types");
 var textArr = fs.readFileSync("./D1/d1.txt", "utf-8");
 // var textArr = fs.readFileSync("./D1/test.txt", "utf-8");
 var [...outputs] = textArr.split("\r\n");
