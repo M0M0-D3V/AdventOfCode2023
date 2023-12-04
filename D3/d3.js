@@ -84,4 +84,94 @@ const partOne = (rows) => {
   return sum;
 };
 
+const partTwo = (rows) => {
+  let gearMap = new Map();
+  let sum = 0;
+
+  for (let i = 0; i < rows.length; i++) {
+    let row = rows[i];
+
+    for (let c = 0; c < row.length; c++) {
+      let char = row[c];
+
+      if (!isNaN(char)) {
+        let num = row.substring(c).match(/\d+/);
+        let partNum = parseInt(num[0]);
+        // is there an up?
+        if (i > 0) {
+          let match = rows[i - 1].slice(c, c + num[0].length).match(/\*/);
+          if (match) {
+            let pos = `${i - 1}, ${c + match.index}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+          // top left
+          if (c - 1 > 0 && rows[i - 1][c - 1] == "*") {
+            let pos = `${i - 1}, ${c - 1}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+          // top right
+          if (
+            c + num[0].length < row.length &&
+            rows[i - 1][c + num[0].length] == "*"
+          ) {
+            let pos = `${i - 1}, ${c + num[0].length}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+        }
+
+        // is there a down?
+        if (i < rows.length - 1) {
+          let match = rows[i + 1].slice(c, c + num[0].length).match(/\*/);
+          if (match) {
+            let pos = `${i + 1}, ${c + match.index}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+          // bottom left
+          if (c - 1 > 0 && rows[i + 1][c - 1] == "*") {
+            let pos = `${i + 1}, ${c - 1}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+          // bottom right
+          if (
+            c + num[0].length < row.length &&
+            rows[i + 1][c + num[0].length] == "*"
+          ) {
+            let pos = `${i + 1}, ${c + num[0].length}`;
+            checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+          }
+        }
+        // left
+        if (c - 1 > 0 && rows[i][c - 1] == "*") {
+          let pos = `${i}, ${c - 1}`;
+          checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+        }
+        // // right
+        if (
+          c + num[0].length < row.length &&
+          rows[i][c + num[0].length] == "*"
+        ) {
+          let pos = `${i}, ${c + num[0].length}`;
+          checkPosAndAddPartNumToMap(gearMap, pos, partNum);
+        }
+        c += num[0].length;
+      }
+    }
+  }
+  console.log(gearMap);
+  gearMap.forEach((arr) => {
+    arr.length == 2 ? (sum += arr[0] * arr[1]) : "";
+  });
+  return sum;
+};
+
+const checkPosAndAddPartNumToMap = (map, pos, partNum) => {
+  if (map.has(pos)) {
+    let get = map.get(pos);
+    get.push(partNum);
+  } else {
+    map.set(pos, [partNum]);
+  }
+};
+
 console.log(`Part One: `, partOne(textRows));
+console.log(`Part Two: `, partTwo(textRows));
