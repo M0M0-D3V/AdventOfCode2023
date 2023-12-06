@@ -56,6 +56,74 @@ const partOne = (text) => {
   return Math.min(...locations);
 };
 
+const partTwo = (text) => {
+  let seedMap = createA2BMap("seed-", "soil-", text);
+
+  let soilMap = createA2BMap("soil-", "fertilizer-", text);
+
+  let fertilizerMap = createA2BMap("fertilizer-", "water-", text);
+
+  let waterMap = createA2BMap("water-", "light-", text);
+
+  let lightMap = createA2BMap("light-", "temperature-", text);
+
+  let temperatureMap = createA2BMap("temperature-", "humidity-", text);
+
+  let humidityMap = text
+    .slice(text.indexOf("humidity-"))
+    .match(/\d+/g)
+    .map((num) => Number(num))
+    .reduce((result, value, index) => {
+      if (index % 3 === 0) {
+        result.push([]);
+      }
+      result[result.length - 1].push(Number(value));
+      return result;
+    }, []);
+
+  // get seeds
+  let seedRanges = text
+    .slice(text.indexOf("seeds:"), text.indexOf("seed-"))
+    .match(/\d+/g)
+    .map((num) => Number(num))
+    .reduce((result, value, index) => {
+      if (index % 2 === 0) {
+        result.push([]);
+      }
+      result[result.length - 1].push(Number(value));
+      return result;
+    }, []);
+
+  let lowest = humidityMap[0][0];
+  for (let i = 0; i < seedRanges.length; i++) {
+    let seedRange = seedRanges[i];
+    for (let j = 0; j < seedRange[1]; j++) {
+      let seed = seedRange[0] + j;
+
+      // for each seed track through each map
+      // seed-to-soil
+      let soil = findCorrespondingMap(seedMap, seed);
+      // soil-to-fertilizer
+      let fertilizer = findCorrespondingMap(soilMap, soil);
+      // fertilizer-to-water
+      let water = findCorrespondingMap(fertilizerMap, fertilizer);
+      // water-to-light
+      let light = findCorrespondingMap(waterMap, water);
+      // light-to-temperature
+      let temperature = findCorrespondingMap(lightMap, light);
+      // temperature-to-humidity
+      let humidity = findCorrespondingMap(temperatureMap, temperature);
+      // humidity-to-location
+      let location = findCorrespondingMap(humidityMap, humidity);
+
+      if (lowest > location) {
+        lowest = location;
+      }
+    }
+  }
+  return lowest;
+};
+
 const createA2BMap = (start, end, text) => {
   return text
     .slice(text.indexOf(start), text.indexOf(end))
@@ -86,4 +154,5 @@ const findCorrespondingMap = (mapRows, src) => {
   return src;
 };
 
-console.log(`part one: `, partOne(file));
+// console.log(`part one: `, partOne(file));
+console.log(`part two: `, partTwo(file));
