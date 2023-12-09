@@ -1,7 +1,7 @@
 var fs = require("fs");
-// var file = fs.readFileSync("./D7/d7.txt", "utf-8");
+var file = fs.readFileSync("./D7/d7.txt", "utf-8");
 // var file = fs.readFileSync("./D7/test.txt", "utf-8");
-var file = fs.readFileSync("./D7/test2.txt", "utf-8");
+// var file = fs.readFileSync("./D7/test2.txt", "utf-8");
 var rows = file.split("\r\n");
 
 let rankBidMap = new Map();
@@ -31,37 +31,37 @@ const partOne = (rows) => {
     allHands.push(new Hand(hand, bid, type, strengths));
   }
   // get hand ranks
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "highCard";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "onePair";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "twoPair";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "threeKind";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "fullHouse";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "fourKind";
     })
   );
-  sortRanks(
+  sortAndCalculateRanks(
     allHands.filter((hand) => {
       return hand.type === "fiveKind";
     })
@@ -149,62 +149,52 @@ const getStrengths = (hand) => {
   return strengths;
 };
 
-const sortByStrengthIndex = (arr, index) => {
-  for (let i = 0; i < arr.length - 1; i++) {
-    let thisHand = arr[i];
-    for (let j = i + 1; j < arr.length; j++) {
-      let nextHand = arr[j];
+const sortHands = (hands) => {
+  let isSorted;
+  for (let i = 0; i < hands.length; i++) {
+    for (let j = 1; j < hands.length - i; j++) {
+      let hand1 = hands[j - 1];
+      let hand2 = hands[j];
       //compare card strength
-      if (thisHand.strengths[index] > nextHand.strengths[index]) {
-        // if first is bigger, then swap places
-        let holdHand = thisHand;
-        arr[i] = nextHand;
-        arr[j] = holdHand;
+      if (compareHands(hand1, hand2)) {
+        hands = swapHands(hands, j, j - 1);
+        isSorted = false;
       }
     }
+    if (isSorted) return hands;
   }
-  return arr;
+  return hands;
 };
 
-const sortRanks = (handsArray) => {
+const compareHands = (hand1, hand2) => {
+  for (let i = 0; i < hand1.strengths.length; i++) {
+    if (hand1.strengths[i] === hand2.strengths[i]) {
+      continue;
+    }
+    // if first is bigger, then swap places
+    if (hand1.strengths[i] > hand2.strengths[i]) {
+      return true;
+    }
+    if (hand1.strengths[i] < hand2.strengths[i]) {
+      return false;
+    }
+  }
+};
+
+const swapHands = (hands, index1, index2) => {
+  let holdHand = hands[index1];
+  hands[index1] = hands[index2];
+  hands[index2] = holdHand;
+  return hands;
+};
+
+const sortAndCalculateRanks = (handsArray) => {
   if (!handsArray.length) {
     return;
   }
-  let lookNextCard = false;
-  let c = 0;
-  let sortArray = sortByStrengthIndex(handsArray, c);
+  let sortArray = sortHands(handsArray);
 
-  // loop and if no competing strengths, assign rank
-  //
-  do {
-    let tieBreak = [];
-    lookNextCard = false;
-    // sort cth place
-    for (let i = 0; i < sortArray.length - 1; i++) {
-      let thisHand = sortArray[i];
-      let nextHand = sortArray[i + 1];
-      if (thisHand.strengths[c] === nextHand.strengths[c]) {
-        if (!tieBreak.includes(thisHand)) {
-          tieBreak.push(thisHand);
-        }
-        if (!tieBreak.includes(nextHand)) {
-          tieBreak.push(nextHand);
-        }
-      }
-      if (tieBreak.length) {
-        sortArray = tieBreak;
-        lookNextCard = true;
-      } else {
-        lookNextCard = false;
-      }
-    }
-
-    c++;
-  } while (lookNextCard);
-
-  handsArray = sortArray.concat(handsArray.slice(sortArray.length));
-
-  for (let hand of handsArray) {
+  for (let hand of sortArray) {
     console.log(hand);
     let rank = rankBidMap.size + 1;
     rankBidMap.set(rank, hand.bid);
