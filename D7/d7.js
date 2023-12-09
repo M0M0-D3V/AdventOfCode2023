@@ -76,6 +76,9 @@ const partOne = (rows) => {
 };
 
 const partTwo = (rows) => {
+  // J is now Joker => Wild!
+  // they help make hand Types stronger
+  // But single card, they are below 2
   return 0;
 };
 
