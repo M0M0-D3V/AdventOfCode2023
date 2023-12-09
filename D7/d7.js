@@ -1,18 +1,21 @@
 var fs = require("fs");
-var file = fs.readFileSync("./D7/d7.txt", "utf-8");
+// var file = fs.readFileSync("./D7/d7.txt", "utf-8");
 // var file = fs.readFileSync("./D7/test.txt", "utf-8");
+var file = fs.readFileSync("./D7/test2.txt", "utf-8");
 var rows = file.split("\r\n");
 
 let rankBidMap = new Map();
-let cardTypes = {
-  fiveKind: new Map(),
-  fourKind: new Map(),
-  fullHouse: new Map(),
-  threeKind: new Map(),
-  twoPair: new Map(),
-  onePair: new Map(),
-  highCard: new Map(),
-};
+
+class Hand {
+  constructor(cards, bid, type, strengths) {
+    this.cards = cards;
+    this.bid = bid;
+    this.type = type;
+    this.strengths = strengths;
+  }
+}
+
+let allHands = [];
 
 const partOne = (rows) => {
   for (let i = 0; i < rows.length; i++) {
@@ -23,19 +26,48 @@ const partOne = (rows) => {
     let bid = parseInt(line[1]);
     // get hand type
     let type = getType(hand);
-    // save to type map
-    saveType(type, hand, bid);
+    // get strengths []
+    let strengths = getStrengths(hand);
+    allHands.push(new Hand(hand, bid, type, strengths));
   }
   // get hand ranks
-  setRanks(cardTypes["fiveKind"]);
-  setRanks(cardTypes["fourKind"]);
-  setRanks(cardTypes["fullHouse"]);
-  setRanks(cardTypes["threeKind"]);
-  setRanks(cardTypes["twoPair"]);
-  setRanks(cardTypes["onePair"]);
-  setRanks(cardTypes["highCard"]);
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "highCard";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "onePair";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "twoPair";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "threeKind";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "fullHouse";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "fourKind";
+    })
+  );
+  sortRanks(
+    allHands.filter((hand) => {
+      return hand.type === "fiveKind";
+    })
+  );
 
-  let total = 1;
+  let total = 0;
   rankBidMap.forEach((value, key) => {
     console.log(`key: ${key} * val ${value}`);
     total += parseInt(key) * parseInt(value);
@@ -109,58 +141,73 @@ const getType = (hand) => {
   }
 };
 
-const saveType = (type, hand, bid) => {
-  cardTypes[type].set(hand, bid);
+const getStrengths = (hand) => {
+  let strengths = [];
+  for (let card of hand) {
+    strengths.push(cardStrength[card]);
+  }
+  return strengths;
 };
 
-const setRanks = (typeMap) => {
-  if (typeMap.size === 0) {
+const sortByStrengthIndex = (arr, index) => {
+  for (let i = 0; i < arr.length - 1; i++) {
+    let thisHand = arr[i];
+    for (let j = i + 1; j < arr.length; j++) {
+      let nextHand = arr[j];
+      //compare card strength
+      if (thisHand.strengths[index] > nextHand.strengths[index]) {
+        // if first is bigger, then swap places
+        let holdHand = thisHand;
+        arr[i] = nextHand;
+        arr[j] = holdHand;
+      }
+    }
+  }
+  return arr;
+};
+
+const sortRanks = (handsArray) => {
+  if (!handsArray.length) {
     return;
   }
-  let strengths = [];
   let lookNextCard = false;
-  typeMap.forEach((value, key) => {
-    // check first card
-    strengths.push([key, cardStrength[key[0]], value]);
-  });
-  // look at 2nd card
-  for (let i = 0; i < strengths.length - 1; i++) {
-    if (strengths[i][1] === strengths[i + 1][1]) {
-      lookNextCard = true;
-    }
-  }
-  if (lookNextCard) {
+  let c = 0;
+  let sortArray = sortByStrengthIndex(handsArray, c);
+
+  // loop and if no competing strengths, assign rank
+  //
+  do {
+    let tieBreak = [];
     lookNextCard = false;
-    // look at 3rd card
-    for (let i = 0; i < strengths.length - 1; i++) {
-      if (strengths[i][2] === strengths[i + 1][2]) {
+    // sort cth place
+    for (let i = 0; i < sortArray.length - 1; i++) {
+      let thisHand = sortArray[i];
+      let nextHand = sortArray[i + 1];
+      if (thisHand.strengths[c] === nextHand.strengths[c]) {
+        if (!tieBreak.includes(thisHand)) {
+          tieBreak.push(thisHand);
+        }
+        if (!tieBreak.includes(nextHand)) {
+          tieBreak.push(nextHand);
+        }
+      }
+      if (tieBreak.length) {
+        sortArray = tieBreak;
         lookNextCard = true;
+      } else {
+        lookNextCard = false;
       }
     }
-  }
-  if (lookNextCard) {
-    lookNextCard = false;
-    // look at 4th card
-    for (let i = 0; i < strengths.length - 1; i++) {
-      if (strengths[i][3] === strengths[i + 1][3]) {
-        lookNextCard = true;
-      }
-    }
-  }
-  if (lookNextCard) {
-    lookNextCard = false;
-    // look at 5th card
-    for (let i = 0; i < strengths.length - 1; i++) {
-      if (strengths[i][4] === strengths[i + 1][4]) {
-        console.log(`all 5 cards the same`);
-        lookNextCard = true;
-      }
-    }
-  }
-  strengths.sort((a, b) => a[1] - b[1]);
-  for (let strength of strengths) {
+
+    c++;
+  } while (lookNextCard);
+
+  handsArray = sortArray.concat(handsArray.slice(sortArray.length));
+
+  for (let hand of handsArray) {
+    console.log(hand);
     let rank = rankBidMap.size + 1;
-    rankBidMap.set(rank, strength[2]);
+    rankBidMap.set(rank, hand.bid);
   }
 };
 
