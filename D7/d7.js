@@ -75,6 +75,10 @@ const partOne = (rows) => {
   return total;
 };
 
+const partTwo = (rows) => {
+  return 0;
+};
+
 const cardStrength = {
   A: 14,
   K: 13,
@@ -201,4 +205,5 @@ const sortAndCalculateRanks = (handsArray) => {
   }
 };
 
-console.log(`Part One: `, partOne(rows));
+// console.log(`Part One: `, partOne(rows));
+console.log(`Part Two: `, partTwo(rows));
