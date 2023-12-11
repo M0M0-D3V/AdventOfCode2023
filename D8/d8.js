@@ -4,51 +4,28 @@ var file = fs.readFileSync("./D8/d8.txt", "utf-8");
 // var file = fs.readFileSync("./D8/test2.txt", "utf-8");
 var rows = file.split("\r\n");
 
-const partOne = (inputs) => {
+const partOne = (inputs, start, end) => {
   let networkMap = createMap(inputs);
 
   let steps = getStepsArray(inputs);
 
-  let count = 0;
-  let move = "AAA";
-  while (move !== "ZZZ") {
-    for (let step of steps) {
-      move = moveCycle(networkMap, move, step);
-      count++;
-    }
-  }
-
-  return count;
+  return getGhostSteps(networkMap, steps, start, end);
 };
 
 const partTwo = (inputs) => {
   let networkMap = createMap(inputs);
   let steps = getStepsArray(inputs);
-  let stepsLen = steps.length;
-  // simultaneously start from nodes that end with A
   let startNodes = getStartNodes(inputs);
   let startNodesLen = startNodes.length;
   let endNodes = getEndNodes(inputs);
   let endNodesSet = new Set(endNodes);
-  let count = 0;
-  let index = 0;
 
-  while (!startNodes.every((node) => endNodesSet.has(node))) {
-    let step = steps[index];
-    // track all progressions
-    for (let n = 0; n < startNodesLen; n++) {
-      let node = startNodes[n];
-      startNodes[n] = moveCycle(networkMap, node, step);
-    }
-    count++;
-    if (index < stepsLen - 1) {
-      index++;
-    } else {
-      index = 0;
-    }
+  let answers = [];
+  for (let i = 0; i < startNodesLen; i++) {
+    let start = startNodes[i];
+    answers.push(getGhostStepsMany(networkMap, steps, start, endNodesSet));
   }
-  // total steps till all end on nodes ending with Z
-  return count;
+  return lcmArray(answers);
 };
 
 const createMap = (inputs) => {
@@ -76,6 +53,30 @@ const getStepsArray = (inputs) => {
       .split("");
   }
   return steps;
+};
+
+const getGhostSteps = (map, steps, start, end) => {
+  let count = 0;
+  let move = start;
+  while (move !== end) {
+    for (let step of steps) {
+      move = moveCycle(map, move, step);
+      count++;
+    }
+  }
+  return count;
+};
+
+const getGhostStepsMany = (map, steps, start, endSet) => {
+  let count = 0;
+  let move = start;
+  while (!endSet.has(move)) {
+    for (let step of steps) {
+      move = moveCycle(map, move, step);
+      count++;
+    }
+  }
+  return count;
 };
 
 const moveCycle = (map, key, dir) => {
@@ -114,5 +115,20 @@ const getEndNodes = (inputs) => {
   return endNodes;
 };
 
-// console.log(`Part One: `, partOne(rows));
+const gcd = (a, b) => {
+  if (b === 0) {
+    return a;
+  }
+  return gcd(b, a % b);
+};
+
+const lcm = (a, b) => {
+  return (a * b) / gcd(a, b);
+};
+
+const lcmArray = (numbers) => {
+  return numbers.reduce((a, b) => lcm(a, b));
+};
+
+// console.log(`Part One: `, partOne(rows, "AAA", "ZZZ"));
 console.log(`Part Two: `, partTwo(rows));
